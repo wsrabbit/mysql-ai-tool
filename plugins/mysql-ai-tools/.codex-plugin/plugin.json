@@ -1,0 +1,19 @@
+{
+  "name": "mysql-ai-tools",
+  "version": "0.1.0",
+  "description": "Read-only MySQL tools with bounded queries and local credentials",
+  "author": {
+    "name": "Local developer"
+  },
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Mysql Ai Tools",
+    "shortDescription": "Query MySQL through local read-only tools.",
+    "longDescription": "Inspect schema, run bounded SELECT queries, and diagnose local MySQL connections.",
+    "developerName": "Local developer",
+    "category": "Productivity",
+    "capabilities": [],
+    "defaultPrompt": "Help me use Mysql Ai Tools."
+  },
+  "mcpServers": "./.mcp.json"
+}

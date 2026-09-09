@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mysql-ai-tools"
+version = "0.1.0"
+description = "A local, bounded, read-only MySQL MCP server for Codex"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "mcp>=1.20,<2",
+  "PyMySQL[rsa]>=1.2,<2",
+  "sqlglot>=27,<31",
+  "pydantic>=2.11,<3",
+  "keyring>=25,<26",
+  "tomlkit>=0.13,<1",
+]
+
+[project.scripts]
+mysql-ai = "mysql_ai.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.12,<1", "hypothesis>=6,<7"]
+build = ["pyinstaller>=6.15,<7"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mysql_ai"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["integration: requires an explicitly configured disposable MySQL database"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

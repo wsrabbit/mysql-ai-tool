@@ -216,3 +216,28 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# MySQL AI Tools project rules
+.venv/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+__pycache__/
+*.pyc
+work/
+outputs/
+build/
+dist/
+*.egg-info/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.log
+connections.json
+
+# Keep the maintained PyInstaller build specification
+!packaging/mysql-ai.spec

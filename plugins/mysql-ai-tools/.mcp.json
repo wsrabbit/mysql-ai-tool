@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "mysql-ai": {
+      "command": "mysql-ai",
+      "args": [
+        "serve"
+      ]
+    }
+  }
+}

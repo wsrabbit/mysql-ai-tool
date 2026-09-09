@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "limits": {
+    "default_rows": 200,
+    "max_rows": 1000,
+    "max_bytes": 1048576,
+    "field_bytes": 8192,
+    "query_seconds": 10,
+    "connect_seconds": 5,
+    "concurrency": 2,
+    "queue_size": 4,
+    "queue_seconds": 5
+  },
+  "connections": {}
+}
