@@ -2,14 +2,14 @@
 
 ## Windows 发布包（普通使用者）
 
-1. 获取 `mysql-ai-tools-0.1.0-windows-x64.zip` 和对应 SHA-256 文件，从可信来源核对哈希。
+1. 获取 `mysql-ai-tools-0.1.1-windows-x64.zip` 和对应 SHA-256 文件，从可信来源核对哈希。
 2. 解压完整 ZIP，保留 `app/_internal`，在解压目录运行：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-安装到 `%LOCALAPPDATA%\mysql-ai-tools\versions\0.1.0`；配置位于
+安装到 `%LOCALAPPDATA%\mysql-ai-tools\versions\0.1.1`；配置位于
 `%LOCALAPPDATA%\mysql-ai-tools\config\connections.json`，日志在 `logs`。
 无需 Python、uv、Node、MySQL CLI 或管理员权限。宿主的文件/网络审批仍按该电脑策略执行。
 安装会备份变更前的 Codex 配置，仅管理 `mcp_servers.mysql-ai`，保留其他服务器与设置。
@@ -17,7 +17,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 3. 使用专用只读账号配置连接（密码在本机隐藏输入）：
 
 ```powershell
-$mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.0/app/mysql-ai.exe'
+$mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.1/app/mysql-ai.exe'
 & $mysqlAi config add dev --host db.example.internal --user ai_reader --database shop --ssl-ca C:\certs\mysql-ca.pem
 & $mysqlAi doctor --connection dev
 ```
@@ -92,7 +92,7 @@ schema_version=1 配置可共用；未来不兼容配置迁移需要配套恢复
 在**已安装版本目录**运行（示例）：
 
 ```powershell
-$uninstaller = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.0/uninstall.ps1'
+$uninstaller = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.1/uninstall.ps1'
 powershell -ExecutionPolicy Bypass -File $uninstaller
 ```
 

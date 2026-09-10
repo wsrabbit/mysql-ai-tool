@@ -1,5 +1,6 @@
 """Create a source archive using an explicit allowlist (no configs, caches or credentials)."""
 
+import hashlib
 import zipfile
 from pathlib import Path
 
@@ -16,12 +17,14 @@ files = [
         "uv.lock",
         ".python-version",
         ".gitignore",
+        ".gitattributes",
+        "LICENSE",
         "README.md",
         "INSTALL.md",
         "CHANGELOG.md",
     )
 ]
-for name in ("src", "tests", "scripts", "packaging", "plugins", "docs", "examples"):
+for name in ("src", "tests", "scripts", "packaging", "plugins", "docs", "examples", ".github"):
     files.extend(
         p
         for p in (root / name).rglob("*")
@@ -30,4 +33,6 @@ for name in ("src", "tests", "scripts", "packaging", "plugins", "docs", "example
 with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
     for path in sorted(files):
         bundle.write(path, path.relative_to(root))
+digest = hashlib.sha256(archive.read_bytes()).hexdigest()
+archive.with_suffix(".zip.sha256").write_text(f"{digest}  {archive.name}\n", encoding="ascii")
 print(archive)

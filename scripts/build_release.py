@@ -57,7 +57,7 @@ def main():
     shutil.copytree(ROOT / "plugins", release / "plugins")
     for name in ("install.ps1", "uninstall.ps1"):
         shutil.copy2(ROOT / "packaging/windows" / name, release / name)
-    for name in ("README.md", "INSTALL.md", "CHANGELOG.md", "uv.lock"):
+    for name in ("README.md", "INSTALL.md", "CHANGELOG.md", "LICENSE", "uv.lock"):
         shutil.copy2(ROOT / name, release / name)
     shutil.copytree(ROOT / "docs", release / "docs")
     shutil.copytree(ROOT / "examples", release / "examples")
@@ -72,6 +72,9 @@ def main():
     ]
     manifest = {
         "version": __version__,
+        "commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
+        if (ROOT / ".git").exists()
+        else None,
         "python": platform.python_version(),
         "platform": platform.platform(),
         "files": files,
@@ -81,6 +84,9 @@ def main():
     archive = Path(shutil.make_archive(str(output / release.name), "zip", release))
     digest = hashlib.sha256(archive.read_bytes()).hexdigest()
     archive.with_suffix(".zip.sha256").write_text(f"{digest}  {archive.name}\n", encoding="ascii")
+    if github_output := os.environ.get("GITHUB_OUTPUT"):
+        with open(github_output, "a", encoding="utf-8") as handle:
+            handle.write(f"release_directory={release}\nversion={__version__}\n")
     print(
         json.dumps(
             {"archive": str(archive), "release_directory": str(release), "sha256": digest}, indent=2

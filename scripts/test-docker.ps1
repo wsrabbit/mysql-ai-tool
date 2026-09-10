@@ -5,6 +5,7 @@ $OutputEncoding = [Console]::OutputEncoding
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location -LiteralPath $projectRoot
 $pythonPath = Join-Path $projectRoot '.venv/Scripts/python.exe'
+if (-not (Test-Path -LiteralPath $pythonPath)) { $pythonPath = Join-Path $projectRoot '.venv/bin/python' }
 if (-not (Test-Path -LiteralPath $pythonPath)) { throw '请先执行 uv sync --group build。' }
 if ($ReportName -notmatch '^[a-zA-Z0-9_-]+$') { throw '无效的报告名称。' }
 if ($Executable) {
