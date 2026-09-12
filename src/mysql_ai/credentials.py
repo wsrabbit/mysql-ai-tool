@@ -70,3 +70,14 @@ def check_storage() -> None:
                 store.delete_password(SERVICE, identifier)
             except Exception as exc:
                 raise ToolError("CREDENTIAL_BACKEND", "无法清理本工具生成的测试凭据。") from exc
+
+
+def delete_password(credential_id: str) -> None:
+    try:
+        store = backend()
+        if store.get_password(SERVICE, credential_id) is not None:
+            store.delete_password(SERVICE, credential_id)
+    except ToolError:
+        raise
+    except Exception as exc:
+        raise ToolError("CREDENTIAL_BACKEND", "无法清理本机凭据记录。") from exc

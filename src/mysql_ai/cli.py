@@ -10,7 +10,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from mysql_ai import __version__
-from mysql_ai.config import config_path, data_home, load_settings, save_settings
+from mysql_ai.config import config_path, data_home, load_settings, load_snapshot, save_settings
 from mysql_ai.errors import ToolError
 from mysql_ai.models import ConnectionProfile, Settings
 
@@ -34,6 +34,7 @@ def parser():
     )
     config = commands.add_parser("config").add_subparsers(dest="action", required=True)
     config.add_parser("list")
+    config.add_parser("wizard", help="交互式新建或修改数据库连接")
     add = config.add_parser("add")
     add.add_argument("name")
     add.add_argument("--host", required=True)
@@ -62,7 +63,11 @@ def parser():
 
 
 def configure(args):
-    settings = load_settings()
+    if args.action == "wizard":
+        from mysql_ai.wizard import run_wizard
+
+        return run_wizard()
+    settings, snapshot = load_snapshot()
     if args.action == "list":
         return {
             "ok": True,
@@ -86,12 +91,15 @@ def configure(args):
         profile = settings.connections.get(args.name)
         if profile is None:
             raise ToolError("CONNECTION_UNKNOWN", "连接别名不存在。")
-        if args.delete_password and not profile.password_env:
-            from mysql_ai.credentials import SERVICE, backend
-
-            backend().delete_password(SERVICE, profile.credential_id)
         del settings.connections[args.name]
-        save_settings(settings)
+        save_settings(settings, expected=snapshot)
+        if args.delete_password and not profile.password_env:
+            from mysql_ai.credentials import delete_password
+
+            if not any(
+                p.credential_id == profile.credential_id for p in settings.connections.values()
+            ):
+                delete_password(profile.credential_id)
         return {"ok": True, "removed": args.name}
     if args.name in settings.connections and not args.replace:
         raise ToolError("CONFIG_EXISTS", "连接已存在；如需替换请显式传入 --replace。")
@@ -109,18 +117,19 @@ def configure(args):
     settings.connections[args.name] = profile
     # Validate alias and entire configuration before touching credential storage.
     Settings.model_validate_json(settings.model_dump_json())
+    secret = None
     if not args.password_env:
-        from mysql_ai.credentials import set_password
-
         if not sys.stdin.isatty():
             raise ToolError(
                 "INTERACTIVE_REQUIRED", "请在本机交互终端运行此命令输入密码；或显式使用环境变量。"
             )
         secret = getpass.getpass("MySQL 密码（隐藏输入）: ")
-        set_password(profile.credential_id, secret)
-    save_settings(settings)
+    from mysql_ai.connections import save_connection
+
+    messages = save_connection(config_path(), snapshot, args.name, profile, secret)
     return {
         "ok": True,
+        "warnings": messages,
         "connection": args.name,
         "config_path": str(config_path()),
         "next": "运行 doctor --connection 检查连接；已运行的 MCP 需要重启读取配置。",

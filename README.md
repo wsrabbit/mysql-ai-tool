@@ -32,15 +32,16 @@
    powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
    ```
 
-4. 按安装输出的程序路径配置连接。以下以 0.1.1 为例，请替换数据库地址、账号、库名和 CA 路径：
+4. 按安装输出启动交互式连接向导：
 
    ```powershell
-   $mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.1/app/mysql-ai.exe'
-   & $mysqlAi config add dev --host db.example.internal --user ai_reader --database shop --ssl-ca C:\certs\mysql-ca.pem
-   & $mysqlAi doctor --connection dev
+   $mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.2.0/app/mysql-ai.exe'
+   & $mysqlAi config wizard
    ```
 
-   密码在本机隐藏输入，保存到当前 Windows 用户的凭据存储。同一账号多个库可重复传 `--database`。默认验证 TLS 证书与主机名。
+   向导逐步输入地址、账号、数据库和 TLS 设置，隐藏输入密码，逐库验证后确认保存。
+   已有连接可选择修改并保留原密码；失败可重试或明确选择未验证保存。
+   详细操作见 [连接向导](docs/WIZARD.md)，自动化脚本仍可使用 [config add](INSTALL.md)。
 5. 新建 Codex 会话，确认 `mysql-ai` 工具加载后开始查询。
 
 安装会备份并保留其他 Codex 配置。已打开的会话不会自动加载新工具。自定义安装目录、升级、回退与卸载见 [INSTALL.md](INSTALL.md)。

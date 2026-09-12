@@ -47,3 +47,5 @@ $mcpDefinition | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $
 if ($LASTEXITCODE -ne 0) { throw '注册失败，请查看错误；已保留程序文件。' }
 Write-Host "安装完成。配置连接：& '$targetProgram' --home '$installPath' config add dev --host 127.0.0.1 --user ai_reader --database shop"
 Write-Host '配置后运行 doctor --connection dev，并新建 Codex 会话。'
+
+Write-Host "交互式配置连接：& '$targetProgram' --home '$installPath' config wizard"

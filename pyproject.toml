@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "mysql-ai-tools"
-version = "0.1.1"
+version = "0.2.0"
 description = "A local, bounded, read-only MySQL MCP server for Codex"
 readme = "README.md"
 requires-python = ">=3.12,<3.14"

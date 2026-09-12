@@ -164,3 +164,95 @@ def test_server_timeout_and_connection_cleanup(live_service):
         assert not running, "Timed-out query remained active on server"
     finally:
         observer.close()
+
+
+def test_ephemeral_password_checks_all_databases(live_service, monkeypatch):
+    from mysql_ai.connections import check_connection
+
+    profile = live_service.settings.connections["fixture"].model_copy(
+        update={"databases": ["shop", "shop_reports"]}
+    )
+    password = os.environ["MYSQL_AI_TEST_PASSWORD"]
+    monkeypatch.delenv("MYSQL_AI_TEST_PASSWORD")
+    result = check_connection(profile, live_service.settings.limits, password)
+    assert result["ok"]
+    assert [r["database"] for r in result["databases"]] == ["shop", "shop_reports"]
+
+
+def test_ephemeral_password_rejects_bad_auth(live_service):
+    from mysql_ai.connections import check_connection
+
+    result = check_connection(
+        live_service.settings.connections["fixture"],
+        live_service.settings.limits,
+        "deliberately-wrong-fixture-password",
+    )
+    assert not result["ok"]
+    assert result["databases"][0]["error"]["code"] == "AUTH_FAILED"
+
+
+def test_wizard_detects_partial_database_permission(live_service):
+    from mysql_ai.connections import check_connection
+
+    profile = live_service.settings.connections["fixture"].model_copy(
+        update={"databases": ["shop", "shop_private"]}
+    )
+    result = check_connection(
+        profile, live_service.settings.limits, os.environ["MYSQL_AI_TEST_PASSWORD"]
+    )
+    assert not result["ok"] and result["databases"][0]["ok"]
+    assert result["databases"][1]["error"]["code"] == "PERMISSION_DENIED"
+
+
+def test_wizard_checks_tls_without_downgrading(live_service):
+    from mysql_ai.connections import check_connection
+
+    profile = live_service.settings.connections["fixture"].model_copy(update={"tls": "verify"})
+    result = check_connection(
+        profile, live_service.settings.limits, os.environ["MYSQL_AI_TEST_PASSWORD"]
+    )
+    assert result["databases"][0]["error"]["code"] == "TLS_FAILED"
+    assert profile.tls == "verify"
+
+
+def test_wizard_real_connection_and_save(live_service, tmp_path, monkeypatch):
+    from mysql_ai.config import load_settings
+    from mysql_ai.wizard import run_wizard
+
+    stored = {}
+    password = os.environ["MYSQL_AI_TEST_PASSWORD"]
+    answers = iter(
+        [
+            "wizard_live",
+            "127.0.0.1",
+            os.environ["MYSQL_AI_TEST_PORT"],
+            "ai_reader",
+            "test",
+            "shop,shop_reports",
+            "3",
+            "y",
+            "6",
+            "y",
+        ]
+    )
+
+    class FixtureTerminal:
+        def ask(self, prompt):
+            return next(answers)
+
+        def secret(self, prompt):
+            return password
+
+        def show(self, message):
+            assert password not in message
+
+    monkeypatch.setattr(
+        "mysql_ai.credentials.set_password", lambda key, value: stored.update({key: value})
+    )
+    path = tmp_path / "wizard-config.json"
+    result = run_wizard(FixtureTerminal(), path)
+    assert result["verified"]
+    profile = load_settings(path).connections["wizard_live"]
+    assert stored[profile.credential_id] == password
+    assert profile.databases == ["shop", "shop_reports"]
+    assert password not in path.read_text()

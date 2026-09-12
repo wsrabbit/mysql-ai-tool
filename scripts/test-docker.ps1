@@ -25,8 +25,11 @@ $initPath = Join-Path $testDirectory 'init.sql'
 $fixture = @"
 SET NAMES utf8mb4;
 CREATE DATABASE shop CHARACTER SET utf8mb4;
+CREATE DATABASE shop_reports CHARACTER SET utf8mb4;
+CREATE DATABASE shop_private CHARACTER SET utf8mb4;
 CREATE USER 'ai_reader'@'%' IDENTIFIED BY '$testReadPassword';
 GRANT SELECT, SHOW VIEW ON shop.* TO 'ai_reader'@'%';
+GRANT SELECT, SHOW VIEW ON shop_reports.* TO 'ai_reader'@'%';
 USE shop;
 CREATE TABLE customers (id INT PRIMARY KEY, name VARCHAR(50));
 CREATE TABLE orders (id BIGINT PRIMARY KEY, customer_id INT, amount DECIMAL(20,2),

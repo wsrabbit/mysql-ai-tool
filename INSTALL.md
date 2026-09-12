@@ -2,22 +2,31 @@
 
 ## Windows 发布包（普通使用者）
 
-1. 获取 `mysql-ai-tools-0.1.1-windows-x64.zip` 和对应 SHA-256 文件，从可信来源核对哈希。
+1. 获取 `mysql-ai-tools-0.2.0-windows-x64.zip` 和对应 SHA-256 文件，从可信来源核对哈希。
 2. 解压完整 ZIP，保留 `app/_internal`，在解压目录运行：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
 
-安装到 `%LOCALAPPDATA%\mysql-ai-tools\versions\0.1.1`；配置位于
+安装到 `%LOCALAPPDATA%\mysql-ai-tools\versions\0.2.0`；配置位于
 `%LOCALAPPDATA%\mysql-ai-tools\config\connections.json`，日志在 `logs`。
 无需 Python、uv、Node、MySQL CLI 或管理员权限。宿主的文件/网络审批仍按该电脑策略执行。
 安装会备份变更前的 Codex 配置，仅管理 `mcp_servers.mysql-ai`，保留其他服务器与设置。
 
-3. 使用专用只读账号配置连接（密码在本机隐藏输入）：
+3. 推荐使用交互式向导配置专用只读账号：
 
 ```powershell
-$mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.1/app/mysql-ai.exe'
+$mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.2.0/app/mysql-ai.exe'
+& $mysqlAi config wizard
+```
+
+按步骤新建或修改连接，选择 TLS、隐藏输入密码、逐库验证并确认保存。操作说明见 [连接向导](docs/WIZARD.md)。
+安装不会自动进入向导，保持无人值守安装兼容。也可继续使用参数命令：
+
+
+```powershell
+$mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.2.0/app/mysql-ai.exe'
 & $mysqlAi config add dev --host db.example.internal --user ai_reader --database shop --ssl-ca C:\certs\mysql-ca.pem
 & $mysqlAi doctor --connection dev
 ```
@@ -28,7 +37,7 @@ $mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.1/app/mysql-
 
 密码保存到当前 Windows 用户的 Credential Locker，配置仅存随机凭据标识。
 可运行 `doctor --credential-check` 用一条临时记录验证凭据读写，测试后自动删除该记录。
-重配连接需 `--replace`，不会原地覆盖旧凭据；旧凭据可在 Windows 凭据管理器清理。
+参数命令重配连接需 `--replace`；新配置保存成功后才清理不再被引用的旧凭据。向导修改连接可选择保留原密码。
 不要将密码放入聊天、命令参数或仓库。
 
 4. 新建 Codex 会话，确认 MCP 工具加载后尝试：
@@ -92,7 +101,7 @@ schema_version=1 配置可共用；未来不兼容配置迁移需要配套恢复
 在**已安装版本目录**运行（示例）：
 
 ```powershell
-$uninstaller = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.1.1/uninstall.ps1'
+$uninstaller = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.2.0/uninstall.ps1'
 powershell -ExecutionPolicy Bypass -File $uninstaller
 ```
 

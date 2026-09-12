@@ -32,12 +32,12 @@ def safe_db_error(exc: Exception) -> ToolError:
     return ToolError("DATABASE_ERROR", "数据库拒绝该操作；请检查 SQL 支持范围和数据库设置。")
 
 
-def connect(profile: ConnectionProfile, database: str, limits: Limits):
+def connect(profile: ConnectionProfile, database: str, limits: Limits, *, password=None):
     options = dict(
         host=profile.host,
         port=profile.port,
         user=profile.user,
-        password=password_for(profile),
+        password=password_for(profile) if password is None else password,
         database=database,
         charset="utf8mb4",
         autocommit=True,
@@ -95,10 +95,10 @@ def execute(profile, database, limits, sql, params, max_rows):
             conn.close()
 
 
-def probe(profile, database, limits):
+def probe(profile, database, limits, *, password=None):
     conn = None
     try:
-        conn = connect(profile, database, limits)
+        conn = connect(profile, database, limits, password=password)
         with conn.cursor() as cur:
             cur.execute("SELECT VERSION(), @@session.time_zone, @@session.sql_mode")
             version, timezone, mode = cur.fetchone()

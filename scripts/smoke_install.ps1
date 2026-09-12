@@ -17,6 +17,14 @@ if (-not (Test-Path -LiteralPath (Join-Path $skillsRoot 'mysql-assistant/SKILL.m
 $content = [IO.File]::ReadAllText($config)
 if (-not $content.Contains('fixture-model') -or -not $content.Contains('[mcp_servers.mysql-ai]')) { throw 'Registration or configuration preservation failed' }
 $versionPath = Join-Path $installRoot "versions/$version"
+$programPath = Join-Path $versionPath 'app/mysql-ai.exe'
+& $programPath config wizard --help
+if ($LASTEXITCODE -ne 0) { throw 'Frozen wizard command missing' }
+$wizardHome = Join-Path $testRoot 'noninteractive-wizard'
+$wizardOutput = '' | & $programPath --home $wizardHome config wizard
+if ($LASTEXITCODE -ne 1 -or -not (($wizardOutput -join '') -match 'INTERACTIVE_REQUIRED')) { throw 'Frozen wizard must refuse pipe input' }
+if (Test-Path -LiteralPath (Join-Path $wizardHome 'config/connections.json')) { throw 'Noninteractive wizard wrote configuration' }
+
 & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $versionPath 'uninstall.ps1') -CodexHome $codexRoot -RemoveProgramFiles
 if ($LASTEXITCODE -ne 0) { throw 'Uninstall failed' }
 $content = [IO.File]::ReadAllText($config)
