@@ -35,7 +35,7 @@
 4. 按安装输出启动交互式连接向导：
 
    ```powershell
-   $mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.2.0/app/mysql-ai.exe'
+   $mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.3.0/app/mysql-ai.exe'
    & $mysqlAi config wizard
    ```
 

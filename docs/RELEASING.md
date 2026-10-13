@@ -27,8 +27,8 @@
 4. 在同一提交打标签并推送，例如：
 
    ```powershell
-   git tag -a v0.2.0 -m "MySQL AI Tools 0.2.0"
-   git push origin v0.2.0
+   git tag -a v0.3.0 -m "MySQL AI Tools 0.3.0"
+   git push origin v0.3.0
    ```
 
 5. 到 [Release 工作流](https://github.com/wsrabbit/mysql-ai-tool/actions/workflows/release.yml) 查看结果。

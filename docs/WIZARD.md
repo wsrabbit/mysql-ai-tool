@@ -3,14 +3,14 @@
 安装后在普通 PowerShell 中执行安装脚本显示的命令：
 
 ```powershell
-$mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.2.0/app/mysql-ai.exe'
+$mysqlAi = Join-Path $env:LOCALAPPDATA 'mysql-ai-tools/versions/0.3.0/app/mysql-ai.exe'
 & $mysqlAi config wizard
 ```
 
 自定义安装目录时，请同时指定对应配置目录：
 
 ```powershell
-& 'C:\自定义目录\versions\0.2.0\app\mysql-ai.exe' --home 'C:\自定义目录' config wizard
+& 'C:\自定义目录\versions\0.3.0\app\mysql-ai.exe' --home 'C:\自定义目录' config wizard
 ```
 
 源码环境运行 `uv run --no-sync mysql-ai config wizard`。向导要求交互终端；

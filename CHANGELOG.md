@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0
 
 - 支持 EXISTS / NOT EXISTS 查询，包括关联、嵌套子查询及执行计划；保持子查询内的数据库白名单、只读语法和参数校验。
 
