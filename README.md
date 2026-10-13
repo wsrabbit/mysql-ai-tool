@@ -15,7 +15,7 @@
 | 查看已配置连接、诊断网络/TLS/权限 | `list_connections`、`test_connection` |
 | 查看允许访问的数据库、表和视图 | `list_databases`、`list_tables` |
 | 读取字段、索引和外键 | `describe_table` |
-| 参数化 SELECT：过滤、JOIN、分组、聚合、排序、子查询 | `query` |
+| 参数化 SELECT：过滤、JOIN、分组、聚合、排序、子查询（含 EXISTS / NOT EXISTS） | `query` |
 | 查看普通 SELECT 执行计划 | `explain_query` |
 
 例如：“使用 dev 连接查看 shop 数据库的表结构，再按月份统计已付款订单金额。”

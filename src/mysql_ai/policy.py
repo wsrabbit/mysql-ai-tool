@@ -14,7 +14,7 @@ from mysql_ai.errors import ToolError
 ALLOWED_NODES = frozenset(
     "Select From Table Identifier Column Star Alias TableAlias Join Where Group Having Order "
     "Ordered Limit Offset Literal Null Boolean Paren Subquery Distinct And Or Not EQ NEQ GT "
-    "GTE LT LTE Is In Between Like ILike Add Sub Mul Div IntDiv Mod Neg Tuple Placeholder "
+    "GTE LT LTE Is In Exists Between Like ILike Add Sub Mul Div IntDiv Mod Neg Tuple Placeholder "
     "Case If Count Sum Avg Min Max Coalesce Abs Round Ceil Floor Upper Lower Length "
     "Trim Substring Concat Cast DataType DataTypeParam Date DateAdd DateSub DateDiff "
     "CurrentDate CurrentTimestamp Extract Interval Var Year Month Day TimeToStr "
@@ -69,6 +69,8 @@ def prepare_query(sql: str, params: dict | None, allowed_databases: list[str]) -
         for node in nodes:
             if type(node).__name__ not in ALLOWED_NODES:
                 reject()
+            if isinstance(node, exp.Exists) and not isinstance(node.this.unnest(), exp.Select):
+                reject("EXISTS 仅支持 SELECT 子查询。")
             if isinstance(node, exp.Identifier) and (len(node.name) > 64 or "\x00" in node.name):
                 reject()
             if isinstance(node, exp.Table):

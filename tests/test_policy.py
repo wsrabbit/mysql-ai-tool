@@ -28,6 +28,58 @@ def test_supported(sql):
 @pytest.mark.parametrize(
     "sql",
     [
+        "SELECT EXISTS(SELECT 1 FROM shop.orders WHERE status=:status) AS has_orders",
+        "SELECT NOT EXISTS(SELECT 1 FROM orders WHERE status=:status) AS no_orders",
+        "SELECT c.id FROM customers c WHERE EXISTS "
+        "(SELECT 1 FROM orders o WHERE o.customer_id=c.id AND o.status=:status)",
+        "SELECT c.id FROM customers c WHERE NOT EXISTS "
+        "(SELECT 1 FROM orders o WHERE o.customer_id=c.id AND o.status=:status)",
+        "SELECT c.id FROM customers c WHERE EXISTS (SELECT 1 FROM orders o "
+        "WHERE o.customer_id=c.id AND EXISTS "
+        "(SELECT 1 FROM orders i WHERE i.id=o.id AND i.status=:status))",
+        "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id "
+        "HAVING EXISTS(SELECT 1 FROM orders WHERE status=:status)",
+        "SELECT EXISTS((SELECT 1 FROM orders WHERE status=:status))",
+    ],
+)
+def test_exists_parameters_are_driver_bound(sql):
+    value = "paid' OR 1=1 --"
+    plan = prepare_query(sql, {"status": value}, ["shop"])
+    assert "EXISTS(" in plan.sql
+    assert "%(status)s" in plan.sql
+    assert value not in plan.sql
+    assert plan.params == {"status": value}
+
+
+@pytest.mark.parametrize(
+    "subquery",
+    [
+        "SELECT 1 FROM other.orders",
+        "SELECT 1 FROM mysql.user",
+        "SELECT other.orders.id FROM orders",
+        "SELECT 1 WHERE EXISTS(SELECT 1 FROM other.orders)",
+        "SELECT 1 FROM orders FOR UPDATE",
+        "SELECT 1 FROM orders LOCK IN SHARE MODE",
+        "SELECT 1 INTO OUTFILE '/tmp/x'",
+        "SELECT SLEEP(1)",
+        "SELECT custom_function()",
+        "SELECT 1 UNION SELECT 2",
+        "WITH x AS (SELECT 1) SELECT * FROM x",
+        "DELETE FROM orders",
+        "SELECT :missing",
+        "1",
+    ],
+)
+@pytest.mark.parametrize("predicate", ["EXISTS", "NOT EXISTS"])
+def test_exists_rejects_unsupported_subqueries(subquery, predicate):
+    with pytest.raises(ToolError) as error:
+        prepare_query(f"SELECT 1 WHERE {predicate}({subquery})", {}, ["shop"])
+    assert error.value.code in {"SQL_REJECTED", "SQL_UNSUPPORTED"}
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
         "DELETE FROM orders",
         "SELECT 1; DELETE FROM orders",
         "SELECT 1; SELECT 2",

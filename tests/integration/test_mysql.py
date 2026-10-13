@@ -73,6 +73,42 @@ def test_limits_and_explain(live_service):
     ]
 
 
+@pytest.mark.parametrize(
+    ("predicate", "expected"),
+    [("EXISTS", [[1], [2]]), ("NOT EXISTS", [[3]])],
+)
+def test_correlated_exists_and_explain(live_service, predicate, expected):
+    sql = (
+        f"SELECT o.id FROM orders o WHERE {predicate} "
+        "(SELECT 1 FROM customers c WHERE c.id=o.customer_id AND o.status=:status) "
+        "ORDER BY o.id"
+    )
+    params = {"status": "paid"}
+    assert call(live_service, "query", sql, params)["rows"] == expected
+    assert call(live_service, "explain_query", sql, params)["rows"]
+
+
+def test_exists_projection_and_nested_subquery(live_service):
+    result = call(
+        live_service,
+        "query",
+        "SELECT EXISTS(SELECT 1 FROM orders WHERE status=:paid) AS has_paid, "
+        "EXISTS(SELECT 1 FROM orders WHERE status=:missing) AS has_missing, "
+        "NOT EXISTS(SELECT 1 FROM orders WHERE status=:missing) AS no_missing",
+        {"paid": "paid", "missing": "missing"},
+    )
+    assert result["rows"] == [[1, 0, 1]]
+    nested = call(
+        live_service,
+        "query",
+        "SELECT c.id FROM customers c WHERE EXISTS (SELECT 1 FROM orders o "
+        "WHERE o.customer_id=c.id AND EXISTS "
+        "(SELECT 1 FROM orders i WHERE i.id=o.id AND i.status=:status))",
+        {"status": "paid"},
+    )
+    assert nested["rows"] == [[1]]
+
+
 def test_mysql_rejects_write_even_bypassing_tool(live_service):
     from mysql_ai import db
     from mysql_ai.errors import ToolError
@@ -129,6 +165,19 @@ def test_stdio_queries_real_database(live_service):
                 )
                 assert not result.isError
                 assert result.structuredContent["rows"] == [["30.30"]]
+                exists = await session.call_tool(
+                    "query",
+                    {
+                        "connection": "fixture",
+                        "database": "shop",
+                        "sql": "SELECT c.id FROM customers c WHERE EXISTS "
+                        "(SELECT 1 FROM orders o "
+                        "WHERE o.customer_id=c.id AND o.status=:status)",
+                        "params": {"status": "paid"},
+                    },
+                )
+                assert not exists.isError
+                assert exists.structuredContent["rows"] == [[1]]
 
     asyncio.run(asyncio.wait_for(scenario(), 25))
 

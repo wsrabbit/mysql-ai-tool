@@ -24,13 +24,27 @@
 }
 ```
 
-SQL 子集：单条 SELECT、常见 JOIN、子查询、过滤、分组、排序、聚合与常见日期/数值函数。
+SQL 子集：单条 SELECT、常见 JOIN、子查询（含 EXISTS / NOT EXISTS 及关联子查询）、过滤、分组、排序、聚合与常见日期/数值函数。
 未知 AST 节点和函数默认拒绝。CTE、UNION、窗口函数、存储过程、存储函数、变量、锁定读取、
 文件读写、DML、DDL、用户提示/注释未开放。`--`、`/*`、`#`、`@`、反斜杠即使出现在 SQL 字符串
 字面量中也会保守拒绝，这些值可通过参数传递。不要用这种限制宣称覆盖整个 MySQL 方言。
 
 参数使用 `:name`，params 为 JSON 标量对象。解析后由受控生成器输出 MySQL SQL，并通过 PyMySQL
 绑定值；参数不能替代数据库、表或列名。同名参数可出现多次，缺失和多余参数均拒绝。
+
+例如查询存在已付款订单的客户（params 为 `{"status":"paid"}`）：
+
+```sql
+SELECT c.id FROM customers c
+WHERE EXISTS (
+  SELECT 1 FROM orders o
+  WHERE o.customer_id = c.id AND o.status = :status
+)
+```
+
+改为 `NOT EXISTS` 可查询没有匹配订单的客户，也可在 SELECT 列表中使用
+`EXISTS(SELECT ...)` 返回 0 或 1。EXISTS 内仅支持 SELECT 子查询，所有层级仍受相同的
+数据库白名单、只读语法和参数校验限制；`explain_query` 同样支持这些查询。
 
 响应包含 ok、request_id、connection、database、elapsed_ms；查询响应还包含 columns、rows、
 returned_rows、truncated、warnings。按 columns 与 rows 的位置关联字段，重复列名不会覆盖。
